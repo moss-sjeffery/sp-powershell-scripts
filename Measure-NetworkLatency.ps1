@@ -52,8 +52,6 @@ function Log-Write
 
 Write-LogEvent -Id 1234 -Level "Information" -Message "Initiating network latency tracking script."
 
-
-
 <#
 .Synopsis
    This script tracks latency between a host and target server.
@@ -144,7 +142,7 @@ function Measure-NetworkLatency
 
     while ([datetime]::Now -le $startTime.AddHours($DurationHours))
     {
-        $dbConnection = New-Object System.Data.SqlClient.SqlConnection("Data Source=$DatabaseServer;Initial Catalog=NET_Latency;Integrated Security=SSPI")
+        $dbConnection = New-Object System.Data.SqlClient.SqlConnection("Data Source=$DatabaseServer;Initial Catalog=$DatabaseName;Integrated Security=SSPI")
         $dbConnection.Open()
         $dbCmd = New-Object System.Data.SqlClient.SqlCommand
         $dbCmd.Connection = $dbConnection
