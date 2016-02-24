@@ -10,7 +10,7 @@
     Date: 23rd February 2016
     Author: Steve Jeffery
     Description:   This script is intended to be used to measure latency 
-                   between SharePoint servers and SQL servers.                   
+                   between SharePoint servers and SQL servers.                 
 #>
 
 # Global variables & code
@@ -54,13 +54,13 @@ Write-LogEvent -Id 1234 -Level "Information" -Message "Initiating network latenc
 
 <#
 .Synopsis
-   This script tracks latency between a host and target server.
+   Short description
 .DESCRIPTION
-   This script tracks latency between a host and target server. Output from this script is direct into a SQL database to allow further analysis.
+   Long description
 .EXAMPLE
-   This example will track network latency between two servers for a period of 24 hours.
-   
-   Measure-NetworkLatency -Target "SERVERNAME" -DatabaseServer "SQLSERVER" -DatabaseName "LatencyDB" -LogFilePath "C:\Temp" -DurationHours 48
+   Example of how to use this cmdlet
+.EXAMPLE
+   Another example of how to use this cmdlet
 #>
 function Measure-NetworkLatency
 {
@@ -139,10 +139,9 @@ function Measure-NetworkLatency
 
     $startTime = [datetime]::Now
     
-
     while ([datetime]::Now -le $startTime.AddHours($DurationHours))
     {
-        $dbConnection = New-Object System.Data.SqlClient.SqlConnection("Data Source=$DatabaseServer;Initial Catalog=$DatabaseName;Integrated Security=SSPI")
+        $dbConnection = New-Object System.Data.SqlClient.SqlConnection("Data Source=$DatabaseServer;Initial Catalog=NET_Latency;Integrated Security=SSPI")
         $dbConnection.Open()
         $dbCmd = New-Object System.Data.SqlClient.SqlCommand
         $dbCmd.Connection = $dbConnection
@@ -150,17 +149,17 @@ function Measure-NetworkLatency
         $pingSender = $Ping.Send($target)
         $pingTime = Get-Date -Format dd-MM-yy-hh:mm:ss:ms
         $pingRoundTrip = $pingSender.RoundtripTime
+        $pingLatency = $pingRoundTrip -as [decimal]
+        $pingLatencyRes = $pingLatency  /2
         $pingStatus = $pingSender.Status
         $hostName = $env:COMPUTERNAME
-        $dbCmd.CommandText = "INSERT INTO Latency (Host,Destination,Time,Roundtrip,Status) VALUES('{0}','{1}','{2}','{3}','{4}')" -f $hostName,$target,$pingTime,$pingRoundTrip,$pingStatus
+        $dbCmd.CommandText = "INSERT INTO Latency (Host,Destination,Time,LatencyValue,Status) VALUES('{0}','{1}','{2}','{3}','{4}')" -f $hostName,$target,$pingTime,$pingLatencyRes,$pingStatus
         $dbCmd.executenonquery()
         $dbConnection.Close()
         Write-Host "." -NoNewline
         Start-Sleep -Seconds 2
     }
-
-    
 }   
 
-Measure-NetworkLatency -Target "<server-name>" -DatabaseServer "<server-name>" -DatabaseName "Latency" -LogFilePath "c:\temp" -DurationHours 120
+Measure-NetworkLatency -Target "ServerName" -DatabaseServer "ServerName" -DatabaseName "Latency" -LogFilePath "c:\temp" -DurationHours 24
 
